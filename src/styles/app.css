@@ -174,6 +174,20 @@ h2 {
   gap: 8px;
 }
 
+.export-button {
+  min-height: 44px;
+  border-radius: 8px;
+  border: 1px solid #14532d;
+  padding: 0 14px;
+  background: #166534;
+  color: #ffffff;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
 .secondary-button,
 .icon-text-button {
   padding: 0 14px;
@@ -650,6 +664,54 @@ textarea {
 
 .small-modal {
   width: min(420px, 100%);
+}
+
+.quality-modal {
+  width: min(560px, 100%);
+}
+
+.quality-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.quality-header h2 {
+  margin: 0;
+}
+
+.success-copy {
+  margin: 8px 0 16px;
+  color: #166534;
+  font-weight: 800;
+}
+
+.quality-list {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.quality-item {
+  min-height: 48px;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  background: #fffbeb;
+  color: #78350f;
+  padding: 10px 12px;
+  text-align: left;
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.quality-item.danger {
+  border-color: #fecaca;
+  background: #fff1f2;
+  color: #991b1b;
 }
 
 .number-buttons,

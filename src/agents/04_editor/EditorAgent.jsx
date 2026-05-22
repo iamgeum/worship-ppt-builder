@@ -1,6 +1,19 @@
-import { GripVertical, Image, Plus, RectangleHorizontal, RotateCcw, Settings, Trash2, Type, X } from 'lucide-react';
+import {
+  Download,
+  GripVertical,
+  Image,
+  ListChecks,
+  Plus,
+  RectangleHorizontal,
+  RotateCcw,
+  Settings,
+  Trash2,
+  Type,
+  X,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useWorship } from '../../context/WorshipContext.jsx';
+import { exportSlidesToPptx, inspectSlides } from '../../utils/pptxExporter.js';
 import { getSlideText, makeSlide } from '../../utils/slideHelpers.js';
 
 const presetClass = {
@@ -18,6 +31,8 @@ export default function EditorAgent({ title = 'PPT 만들기', onAddLyrics, onAd
   const [dragIndex, setDragIndex] = useState(null);
   const [dropIndex, setDropIndex] = useState(null);
   const [dragPreview, setDragPreview] = useState(null);
+  const [qualityIssues, setQualityIssues] = useState(null);
+  const [exporting, setExporting] = useState(false);
   const currentSlide = slides[currentSlideIndex] || slides[0];
 
   useEffect(() => {
@@ -109,6 +124,25 @@ export default function EditorAgent({ title = 'PPT 만들기', onAddLyrics, onAd
     setDragPreview(null);
   };
 
+  const runQualityCheck = () => {
+    const issues = inspectSlides(slides);
+    setQualityIssues(issues);
+    setToast(issues.length ? `점검할 항목 ${issues.length}개가 있습니다` : '품질 점검 통과 ✓');
+  };
+
+  const downloadPptx = async () => {
+    setExporting(true);
+    try {
+      await exportSlidesToPptx({ slides, slideFormat, stylePreset });
+      setToast('PPTX 다운로드를 시작했습니다');
+    } catch (error) {
+      console.error(error);
+      setToast('PPTX 내보내기에 실패했습니다');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const moveBySwipe = (deltaX) => {
     const rawSteps = Math.max(-4, Math.min(4, Math.round(deltaX / 110)));
     if (!rawSteps) return;
@@ -153,6 +187,12 @@ export default function EditorAgent({ title = 'PPT 만들기', onAddLyrics, onAd
         </button>
         <button className="danger-button" type="button" onClick={() => deleteSlide(currentSlideIndex)}>
           <Trash2 size={18} /> 삭제
+        </button>
+        <button className="secondary-button" type="button" onClick={runQualityCheck}>
+          <ListChecks size={18} /> 품질 점검
+        </button>
+        <button className="export-button" type="button" onClick={downloadPptx} disabled={exporting}>
+          <Download size={18} /> {exporting ? '내보내는 중' : 'PPTX 다운로드'}
         </button>
         <span className="autosave">자동저장됨 {autoSavedAt || '방금'}</span>
       </header>
@@ -240,6 +280,47 @@ export default function EditorAgent({ title = 'PPT 만들기', onAddLyrics, onAd
       {dragPreview && (
         <div className="drag-preview" style={{ left: dragPreview.x + 16, top: dragPreview.y + 16 }}>
           {dragPreview.text}
+        </div>
+      )}
+
+      {qualityIssues && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true">
+          <section className="small-modal quality-modal">
+            <header className="quality-header">
+              <h2>품질 점검</h2>
+              <button className="icon-button" type="button" onClick={() => setQualityIssues(null)} aria-label="닫기">
+                <X size={18} />
+              </button>
+            </header>
+            {qualityIssues.length === 0 ? (
+              <p className="success-copy">바로 내보내도 괜찮습니다.</p>
+            ) : (
+              <div className="quality-list">
+                {qualityIssues.map((issue, index) => (
+                  <button
+                    className={`quality-item ${issue.level}`}
+                    type="button"
+                    key={`${issue.slideNumber}-${issue.message}-${index}`}
+                    onClick={() => {
+                      updateState((state) => ({ ...state, currentSlideIndex: issue.slideNumber - 1 }));
+                      setQualityIssues(null);
+                    }}
+                  >
+                    <strong>{issue.slideNumber}번</strong>
+                    <span>{issue.message}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            <footer className="modal-actions">
+              <button className="export-button" type="button" onClick={downloadPptx} disabled={exporting}>
+                <Download size={18} /> PPTX 다운로드
+              </button>
+              <button className="secondary-button" type="button" onClick={() => setQualityIssues(null)}>
+                닫기
+              </button>
+            </footer>
+          </section>
         </div>
       )}
     </section>
