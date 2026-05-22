@@ -1,10 +1,18 @@
 import {
+  AlignCenterHorizontal,
+  AlignCenterVertical,
+  AlignEndHorizontal,
+  AlignEndVertical,
+  AlignStartHorizontal,
+  AlignStartVertical,
   ClipboardPaste,
   Copy,
   Download,
   GripVertical,
   Image,
   ListChecks,
+  MoveDown,
+  MoveUp,
   Plus,
   RectangleHorizontal,
   RotateCcw,
@@ -26,6 +34,35 @@ const presetClass = {
   warm: 'preset-warm',
 };
 
+function clampElementBounds(element) {
+  return {
+    ...element,
+    x: Math.max(0, Math.min(100 - element.w, element.x)),
+    y: Math.max(0, Math.min(100 - element.h, element.y)),
+  };
+}
+
+function getSnapValue(value, guides, threshold = 1.4) {
+  const matchedGuide = guides.find((guide) => Math.abs(value - guide) <= threshold);
+  return matchedGuide ?? value;
+}
+
+function getSnappedPosition(element, elements, nextX, nextY) {
+  const otherElements = elements.filter((item) => item.id !== element.id);
+  const xGuides = [0, 50, 100 - element.w];
+  const yGuides = [0, 50, 100 - element.h];
+
+  otherElements.forEach((item) => {
+    xGuides.push(item.x, item.x + item.w / 2 - element.w / 2, item.x + item.w - element.w);
+    yGuides.push(item.y, item.y + item.h / 2 - element.h / 2, item.y + item.h - element.h);
+  });
+
+  return {
+    x: Math.max(0, Math.min(100 - element.w, getSnapValue(nextX, xGuides))),
+    y: Math.max(0, Math.min(100 - element.h, getSnapValue(nextY, yGuides))),
+  };
+}
+
 export default function EditorAgent({ title = 'PPT 만들기', onAddLyrics, onAddScripture }) {
   const { slides, currentSlideIndex, slideFormat, stylePreset, autoSavedAt, updateState, undo, canUndo, setToast } =
     useWorship();
@@ -40,6 +77,7 @@ export default function EditorAgent({ title = 'PPT 만들기', onAddLyrics, onAd
   const imageUploadRef = useRef(null);
   const currentSlide = slides[currentSlideIndex] || slides[0];
   const selectedElement = currentSlide?.elements.find((element) => element.id === selectedId);
+  const selectedElementIndex = currentSlide?.elements.findIndex((element) => element.id === selectedId) ?? -1;
 
   useEffect(() => {
     const onKeyDown = (event) => {
@@ -77,6 +115,16 @@ export default function EditorAgent({ title = 'PPT 만들기', onAddLyrics, onAd
           ArrowDown: [0, step],
         }[event.key];
         moveSelectedElement(movement[0], movement[1]);
+        return;
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key === ']' && selectedElement) {
+        event.preventDefault();
+        changeLayerOrder('forward');
+        return;
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key === '[' && selectedElement) {
+        event.preventDefault();
+        changeLayerOrder('backward');
       }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -208,6 +256,51 @@ export default function EditorAgent({ title = 'PPT 만들기', onAddLyrics, onAd
           : slide,
       ),
     }));
+  };
+
+  const changeLayerOrder = (direction) => {
+    if (!selectedId) return;
+    updateState((state) => ({
+      ...state,
+      slides: state.slides.map((slide, index) => {
+        if (index !== state.currentSlideIndex) return slide;
+        const currentIndex = slide.elements.findIndex((element) => element.id === selectedId);
+        if (currentIndex < 0) return slide;
+        const targetIndex = direction === 'forward' ? currentIndex + 1 : currentIndex - 1;
+        if (targetIndex < 0 || targetIndex >= slide.elements.length) return slide;
+        const nextElements = [...slide.elements];
+        const [moving] = nextElements.splice(currentIndex, 1);
+        nextElements.splice(targetIndex, 0, moving);
+        return { ...slide, elements: nextElements };
+      }),
+    }));
+    setToast(direction === 'forward' ? '앞으로 보냈습니다' : '뒤로 보냈습니다');
+  };
+
+  const alignSelectedElement = (alignment) => {
+    if (!selectedId) return;
+    updateState((state) => ({
+      ...state,
+      slides: state.slides.map((slide, index) =>
+        index === state.currentSlideIndex
+          ? {
+              ...slide,
+              elements: slide.elements.map((element) => {
+                if (element.id !== selectedId) return element;
+                const aligned = { ...element };
+                if (alignment === 'left') aligned.x = 0;
+                if (alignment === 'centerX') aligned.x = (100 - element.w) / 2;
+                if (alignment === 'right') aligned.x = 100 - element.w;
+                if (alignment === 'top') aligned.y = 0;
+                if (alignment === 'centerY') aligned.y = (100 - element.h) / 2;
+                if (alignment === 'bottom') aligned.y = 100 - element.h;
+                return clampElementBounds(aligned);
+              }),
+            }
+          : slide,
+      ),
+    }));
+    setToast('정렬했습니다');
   };
 
   const addSlide = () => {
@@ -397,6 +490,88 @@ export default function EditorAgent({ title = 'PPT 만들기', onAddLyrics, onAd
             >
               <Trash2 size={18} /> 요소 삭제
             </button>
+            <span className="toolbar-divider" />
+            <button
+              className="icon-button"
+              type="button"
+              onClick={() => changeLayerOrder('backward')}
+              disabled={!selectedElement || selectedElementIndex <= 0}
+              aria-label="뒤로 보내기"
+              title="뒤로 보내기"
+            >
+              <MoveDown size={18} />
+            </button>
+            <button
+              className="icon-button"
+              type="button"
+              onClick={() => changeLayerOrder('forward')}
+              disabled={!selectedElement || selectedElementIndex >= currentSlide.elements.length - 1}
+              aria-label="앞으로 보내기"
+              title="앞으로 보내기"
+            >
+              <MoveUp size={18} />
+            </button>
+            <span className="toolbar-divider" />
+            <button
+              className="icon-button"
+              type="button"
+              onClick={() => alignSelectedElement('left')}
+              disabled={!selectedElement}
+              aria-label="왼쪽 정렬"
+              title="왼쪽 정렬"
+            >
+              <AlignStartVertical size={18} />
+            </button>
+            <button
+              className="icon-button"
+              type="button"
+              onClick={() => alignSelectedElement('centerX')}
+              disabled={!selectedElement}
+              aria-label="가운데 정렬"
+              title="가운데 정렬"
+            >
+              <AlignCenterVertical size={18} />
+            </button>
+            <button
+              className="icon-button"
+              type="button"
+              onClick={() => alignSelectedElement('right')}
+              disabled={!selectedElement}
+              aria-label="오른쪽 정렬"
+              title="오른쪽 정렬"
+            >
+              <AlignEndVertical size={18} />
+            </button>
+            <button
+              className="icon-button"
+              type="button"
+              onClick={() => alignSelectedElement('top')}
+              disabled={!selectedElement}
+              aria-label="위쪽 정렬"
+              title="위쪽 정렬"
+            >
+              <AlignStartHorizontal size={18} />
+            </button>
+            <button
+              className="icon-button"
+              type="button"
+              onClick={() => alignSelectedElement('centerY')}
+              disabled={!selectedElement}
+              aria-label="중앙 정렬"
+              title="중앙 정렬"
+            >
+              <AlignCenterHorizontal size={18} />
+            </button>
+            <button
+              className="icon-button"
+              type="button"
+              onClick={() => alignSelectedElement('bottom')}
+              disabled={!selectedElement}
+              aria-label="아래쪽 정렬"
+              title="아래쪽 정렬"
+            >
+              <AlignEndHorizontal size={18} />
+            </button>
             <input
               ref={imageUploadRef}
               className="hidden-file-input"
@@ -421,6 +596,7 @@ export default function EditorAgent({ title = 'PPT 만들기', onAddLyrics, onAd
                 <SlideElement
                   key={element.id}
                   element={element}
+                  siblingElements={currentSlide.elements}
                   selected={selectedId === element.id}
                   onSelect={() => setSelectedId(element.id)}
                   onUpdate={(patch) => updateElement(element.id, patch)}
@@ -481,7 +657,7 @@ export default function EditorAgent({ title = 'PPT 만들기', onAddLyrics, onAd
   );
 }
 
-function SlideElement({ element, selected, onSelect, onUpdate }) {
+function SlideElement({ element, siblingElements, selected, onSelect, onUpdate }) {
   const [moving, setMoving] = useState(null);
   const [resizing, setResizing] = useState(null);
   const [editingInnerText, setEditingInnerText] = useState(false);
@@ -533,9 +709,7 @@ function SlideElement({ element, selected, onSelect, onUpdate }) {
     const parent = event.currentTarget.parentElement.getBoundingClientRect();
     const nextX = ((event.clientX - parent.left - moving.offsetX) / parent.width) * 100;
     const nextY = ((event.clientY - parent.top - moving.offsetY) / parent.height) * 100;
-    const snappedX = Math.abs(nextX - 50) < 2 ? 50 : Math.max(0, Math.min(92, nextX));
-    const snappedY = Math.abs(nextY - 50) < 2 ? 50 : Math.max(0, Math.min(88, nextY));
-    onUpdate({ x: snappedX, y: snappedY });
+    onUpdate(getSnappedPosition(element, siblingElements, nextX, nextY));
   };
 
   return (
