@@ -34,6 +34,12 @@
 - 도형과 이미지 요소를 더블클릭하면 내부 텍스트를 입력/수정할 수 있게 했습니다.
 - 검증: `npm.cmd run build` 성공
 
+### 2026-05-22 SaaS 제품화 검토
+
+- `docs/SAAS_PRODUCT_REVIEW.md`를 추가했습니다.
+- Planning Center, Beautiful.ai, Canva/Pitch/Prezi 계열 제품 패턴을 기준으로 상용화 보강 목록을 정리했습니다.
+- 다음 구현 우선순위를 `PPTX export`, `전체 미리보기`, `품질 점검`, `프로젝트 대시보드` 순서로 제안했습니다.
+
 ### 다음 작업 후보
 
 - 실제 PPTX 내보내기 구현
