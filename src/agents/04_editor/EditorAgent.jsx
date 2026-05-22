@@ -9,9 +9,10 @@ import {
   Settings,
   Trash2,
   Type,
+  Upload,
   X,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useWorship } from '../../context/WorshipContext.jsx';
 import { exportSlidesToPptx, inspectSlides } from '../../utils/pptxExporter.js';
 import { getSlideText, makeSlide } from '../../utils/slideHelpers.js';
@@ -33,6 +34,7 @@ export default function EditorAgent({ title = 'PPT 만들기', onAddLyrics, onAd
   const [dragPreview, setDragPreview] = useState(null);
   const [qualityIssues, setQualityIssues] = useState(null);
   const [exporting, setExporting] = useState(false);
+  const imageUploadRef = useRef(null);
   const currentSlide = slides[currentSlideIndex] || slides[0];
 
   useEffect(() => {
@@ -82,6 +84,34 @@ export default function EditorAgent({ title = 'PPT 만들기', onAddLyrics, onAd
       ),
     }));
     setSelectedId(element.id);
+  };
+
+  const addUploadedImage = (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.addEventListener('load', () => {
+      const element = {
+        id: crypto.randomUUID(),
+        type: 'image',
+        text: '',
+        altText: '',
+        x: 22,
+        y: 22,
+        w: 56,
+        h: 46,
+        fontSize: 18,
+        src: reader.result,
+      };
+      updateState((state) => ({
+        ...state,
+        slides: state.slides.map((slide, index) =>
+          index === state.currentSlideIndex ? { ...slide, elements: [...slide.elements, element] } : slide,
+        ),
+      }));
+      setSelectedId(element.id);
+      setToast('이미지를 추가했습니다');
+    });
+    reader.readAsDataURL(file);
   };
 
   const addSlide = () => {
@@ -253,6 +283,19 @@ export default function EditorAgent({ title = 'PPT 만들기', onAddLyrics, onAd
             <button className="icon-text-button" type="button" onClick={() => addElement('image')}>
               <Image size={18} /> 이미지
             </button>
+            <button className="icon-text-button" type="button" onClick={() => imageUploadRef.current?.click()}>
+              <Upload size={18} /> 업로드
+            </button>
+            <input
+              ref={imageUploadRef}
+              className="hidden-file-input"
+              type="file"
+              accept="image/*"
+              onChange={(event) => {
+                addUploadedImage(event.target.files?.[0]);
+                event.target.value = '';
+              }}
+            />
           </div>
 
           <div className="editor-stage-wrap">
@@ -329,7 +372,50 @@ export default function EditorAgent({ title = 'PPT 만들기', onAddLyrics, onAd
 
 function SlideElement({ element, selected, onSelect, onUpdate }) {
   const [moving, setMoving] = useState(null);
+  const [resizing, setResizing] = useState(null);
   const [editingInnerText, setEditingInnerText] = useState(false);
+
+  useEffect(() => {
+    if (!resizing) return undefined;
+
+    const onPointerMove = (event) => {
+      const deltaX = ((event.clientX - resizing.startX) / resizing.parent.width) * 100;
+      const deltaY = ((event.clientY - resizing.startY) / resizing.parent.height) * 100;
+      const next = {
+        x: resizing.start.x,
+        y: resizing.start.y,
+        w: resizing.start.w,
+        h: resizing.start.h,
+      };
+
+      if (resizing.corner.includes('e')) next.w = Math.max(5, resizing.start.w + deltaX);
+      if (resizing.corner.includes('s')) next.h = Math.max(5, resizing.start.h + deltaY);
+      if (resizing.corner.includes('w')) {
+        const candidateWidth = Math.max(5, resizing.start.w - deltaX);
+        next.x = Math.min(resizing.start.x + resizing.start.w - 5, resizing.start.x + deltaX);
+        next.w = candidateWidth;
+      }
+      if (resizing.corner.includes('n')) {
+        const candidateHeight = Math.max(5, resizing.start.h - deltaY);
+        next.y = Math.min(resizing.start.y + resizing.start.h - 5, resizing.start.y + deltaY);
+        next.h = candidateHeight;
+      }
+
+      next.x = Math.max(0, Math.min(95, next.x));
+      next.y = Math.max(0, Math.min(95, next.y));
+      next.w = Math.min(100 - next.x, next.w);
+      next.h = Math.min(100 - next.y, next.h);
+      onUpdate(next);
+    };
+
+    const onPointerUp = () => setResizing(null);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    return () => {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+    };
+  }, [onUpdate, resizing]);
 
   const onPointerMove = (event) => {
     if (!moving) return;
@@ -399,6 +485,27 @@ function SlideElement({ element, selected, onSelect, onUpdate }) {
         </div>
       )}
       {selected && <span className="position-badge">x {Math.round(element.x)} y {Math.round(element.y)}</span>}
+      {selected &&
+        ['nw', 'ne', 'sw', 'se'].map((corner) => (
+          <button
+            className={`resize-handle ${corner}`}
+            type="button"
+            key={corner}
+            aria-label={`${corner} 크기 조절`}
+            onPointerDown={(event) => {
+              event.stopPropagation();
+              const parent = event.currentTarget.closest('.editor-slide').getBoundingClientRect();
+              setMoving(null);
+              setResizing({
+                corner,
+                startX: event.clientX,
+                startY: event.clientY,
+                parent,
+                start: { x: element.x, y: element.y, w: element.w, h: element.h },
+              });
+            }}
+          />
+        ))}
     </div>
   );
 }

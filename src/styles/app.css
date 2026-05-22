@@ -494,6 +494,10 @@ textarea {
   flex-wrap: wrap;
 }
 
+.hidden-file-input {
+  display: none;
+}
+
 .autosave {
   margin-left: auto;
   color: #64748b;
@@ -548,6 +552,7 @@ textarea {
 
 .slide-element.selected {
   border-color: #2563eb;
+  box-shadow: 0 0 0 1px #2563eb;
 }
 
 .slide-element textarea {
@@ -606,6 +611,17 @@ textarea {
   font-size: 12px;
 }
 
+.image-box:has(img) input {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.image-box:has(img):hover input,
+.slide-element.selected .image-box input:focus {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .image-box img {
   width: 100%;
   height: 100%;
@@ -629,6 +645,41 @@ textarea {
   border-radius: 6px;
   padding: 3px 6px;
   font-size: 12px;
+}
+
+.resize-handle {
+  position: absolute;
+  z-index: 5;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #2563eb;
+  border-radius: 999px;
+  background: #ffffff;
+  padding: 0;
+}
+
+.resize-handle.nw {
+  left: -7px;
+  top: -7px;
+  cursor: nwse-resize;
+}
+
+.resize-handle.ne {
+  right: -7px;
+  top: -7px;
+  cursor: nesw-resize;
+}
+
+.resize-handle.sw {
+  left: -7px;
+  bottom: -7px;
+  cursor: nesw-resize;
+}
+
+.resize-handle.se {
+  right: -7px;
+  bottom: -7px;
+  cursor: nwse-resize;
 }
 
 .bottom-filmstrip {
