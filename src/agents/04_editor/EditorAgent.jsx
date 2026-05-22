@@ -34,6 +34,14 @@ const presetClass = {
   warm: 'preset-warm',
 };
 
+const shapeOptions = [
+  { value: 'rect', label: '사각형' },
+  { value: 'roundRect', label: '둥근 사각형' },
+  { value: 'ellipse', label: '원/타원' },
+  { value: 'diamond', label: '마름모' },
+  { value: 'triangle', label: '삼각형' },
+];
+
 function clampElementBounds(element) {
   return {
     ...element,
@@ -158,6 +166,8 @@ export default function EditorAgent({ title = 'PPT 만들기', onAddLyrics, onAd
       w: type === 'shape' ? 30 : 44,
       h: type === 'shape' ? 20 : 18,
       fontSize: 22,
+      shapeKind: type === 'shape' ? 'roundRect' : undefined,
+      fillColor: type === 'shape' ? '#3b82f6' : undefined,
       src: '',
     };
     updateState((state) => ({
@@ -462,148 +472,156 @@ export default function EditorAgent({ title = 'PPT 만들기', onAddLyrics, onAd
         </aside>
 
         <div className="editor-main">
-          <div className="insert-toolbar">
-            <button className="icon-text-button" type="button" onClick={() => addElement('text')}>
-              <Type size={18} /> 텍스트
-            </button>
-            <button className="icon-text-button" type="button" onClick={() => addElement('shape')}>
-              <RectangleHorizontal size={18} /> 도형
-            </button>
-            <button className="icon-text-button" type="button" onClick={() => addElement('image')}>
-              <Image size={18} /> 이미지
-            </button>
-            <button className="icon-text-button" type="button" onClick={() => imageUploadRef.current?.click()}>
-              <Upload size={18} /> 업로드
-            </button>
-            <span className="toolbar-divider" />
-            <button className="icon-text-button" type="button" onClick={copySelectedElement} disabled={!selectedElement}>
-              <Copy size={18} /> 요소 복사
-            </button>
-            <button className="icon-text-button" type="button" onClick={pasteCopiedElement} disabled={!copiedElement}>
-              <ClipboardPaste size={18} /> 붙여넣기
-            </button>
-            <button
-              className="danger-tool-button"
-              type="button"
-              onClick={deleteSelectedElement}
-              disabled={!selectedElement}
-            >
-              <Trash2 size={18} /> 요소 삭제
-            </button>
-            <span className="toolbar-divider" />
-            <button
-              className="icon-button"
-              type="button"
-              onClick={() => changeLayerOrder('backward')}
-              disabled={!selectedElement || selectedElementIndex <= 0}
-              aria-label="뒤로 보내기"
-              title="뒤로 보내기"
-            >
-              <MoveDown size={18} />
-            </button>
-            <button
-              className="icon-button"
-              type="button"
-              onClick={() => changeLayerOrder('forward')}
-              disabled={!selectedElement || selectedElementIndex >= currentSlide.elements.length - 1}
-              aria-label="앞으로 보내기"
-              title="앞으로 보내기"
-            >
-              <MoveUp size={18} />
-            </button>
-            <span className="toolbar-divider" />
-            <button
-              className="icon-button"
-              type="button"
-              onClick={() => alignSelectedElement('left')}
-              disabled={!selectedElement}
-              aria-label="왼쪽 정렬"
-              title="왼쪽 정렬"
-            >
-              <AlignStartVertical size={18} />
-            </button>
-            <button
-              className="icon-button"
-              type="button"
-              onClick={() => alignSelectedElement('centerX')}
-              disabled={!selectedElement}
-              aria-label="가운데 정렬"
-              title="가운데 정렬"
-            >
-              <AlignCenterVertical size={18} />
-            </button>
-            <button
-              className="icon-button"
-              type="button"
-              onClick={() => alignSelectedElement('right')}
-              disabled={!selectedElement}
-              aria-label="오른쪽 정렬"
-              title="오른쪽 정렬"
-            >
-              <AlignEndVertical size={18} />
-            </button>
-            <button
-              className="icon-button"
-              type="button"
-              onClick={() => alignSelectedElement('top')}
-              disabled={!selectedElement}
-              aria-label="위쪽 정렬"
-              title="위쪽 정렬"
-            >
-              <AlignStartHorizontal size={18} />
-            </button>
-            <button
-              className="icon-button"
-              type="button"
-              onClick={() => alignSelectedElement('centerY')}
-              disabled={!selectedElement}
-              aria-label="중앙 정렬"
-              title="중앙 정렬"
-            >
-              <AlignCenterHorizontal size={18} />
-            </button>
-            <button
-              className="icon-button"
-              type="button"
-              onClick={() => alignSelectedElement('bottom')}
-              disabled={!selectedElement}
-              aria-label="아래쪽 정렬"
-              title="아래쪽 정렬"
-            >
-              <AlignEndHorizontal size={18} />
-            </button>
-            <input
-              ref={imageUploadRef}
-              className="hidden-file-input"
-              type="file"
-              accept="image/*"
-              onChange={(event) => {
-                addUploadedImage(event.target.files?.[0]);
-                event.target.value = '';
-              }}
-            />
-          </div>
+          <div className="canvas-column">
+            <div className="insert-toolbar">
+              <button className="icon-text-button" type="button" onClick={() => addElement('text')}>
+                <Type size={18} /> 텍스트
+              </button>
+              <button className="icon-text-button" type="button" onClick={() => addElement('shape')}>
+                <RectangleHorizontal size={18} /> 도형
+              </button>
+              <button className="icon-text-button" type="button" onClick={() => addElement('image')}>
+                <Image size={18} /> 이미지
+              </button>
+              <button className="icon-text-button" type="button" onClick={() => imageUploadRef.current?.click()}>
+                <Upload size={18} /> 업로드
+              </button>
+              <span className="toolbar-divider" />
+              <button
+                className="icon-text-button"
+                type="button"
+                onClick={copySelectedElement}
+                disabled={!selectedElement}
+              >
+                <Copy size={18} /> 요소 복사
+              </button>
+              <button className="icon-text-button" type="button" onClick={pasteCopiedElement} disabled={!copiedElement}>
+                <ClipboardPaste size={18} /> 붙여넣기
+              </button>
+              <button
+                className="danger-tool-button"
+                type="button"
+                onClick={deleteSelectedElement}
+                disabled={!selectedElement}
+              >
+                <Trash2 size={18} /> 요소 삭제
+              </button>
+              <span className="toolbar-divider" />
+              <button
+                className="icon-button"
+                type="button"
+                onClick={() => changeLayerOrder('backward')}
+                disabled={!selectedElement || selectedElementIndex <= 0}
+                aria-label="뒤로 보내기"
+                title="뒤로 보내기"
+              >
+                <MoveDown size={18} />
+              </button>
+              <button
+                className="icon-button"
+                type="button"
+                onClick={() => changeLayerOrder('forward')}
+                disabled={!selectedElement || selectedElementIndex >= currentSlide.elements.length - 1}
+                aria-label="앞으로 보내기"
+                title="앞으로 보내기"
+              >
+                <MoveUp size={18} />
+              </button>
+              <span className="toolbar-divider" />
+              <button
+                className="icon-button"
+                type="button"
+                onClick={() => alignSelectedElement('left')}
+                disabled={!selectedElement}
+                aria-label="왼쪽 정렬"
+                title="왼쪽 정렬"
+              >
+                <AlignStartVertical size={18} />
+              </button>
+              <button
+                className="icon-button"
+                type="button"
+                onClick={() => alignSelectedElement('centerX')}
+                disabled={!selectedElement}
+                aria-label="가운데 정렬"
+                title="가운데 정렬"
+              >
+                <AlignCenterVertical size={18} />
+              </button>
+              <button
+                className="icon-button"
+                type="button"
+                onClick={() => alignSelectedElement('right')}
+                disabled={!selectedElement}
+                aria-label="오른쪽 정렬"
+                title="오른쪽 정렬"
+              >
+                <AlignEndVertical size={18} />
+              </button>
+              <button
+                className="icon-button"
+                type="button"
+                onClick={() => alignSelectedElement('top')}
+                disabled={!selectedElement}
+                aria-label="위쪽 정렬"
+                title="위쪽 정렬"
+              >
+                <AlignStartHorizontal size={18} />
+              </button>
+              <button
+                className="icon-button"
+                type="button"
+                onClick={() => alignSelectedElement('centerY')}
+                disabled={!selectedElement}
+                aria-label="중앙 정렬"
+                title="중앙 정렬"
+              >
+                <AlignCenterHorizontal size={18} />
+              </button>
+              <button
+                className="icon-button"
+                type="button"
+                onClick={() => alignSelectedElement('bottom')}
+                disabled={!selectedElement}
+                aria-label="아래쪽 정렬"
+                title="아래쪽 정렬"
+              >
+                <AlignEndHorizontal size={18} />
+              </button>
+              <input
+                ref={imageUploadRef}
+                className="hidden-file-input"
+                type="file"
+                accept="image/*"
+                onChange={(event) => {
+                  addUploadedImage(event.target.files?.[0]);
+                  event.target.value = '';
+                }}
+              />
+            </div>
 
-          <div className="editor-stage-wrap">
-            <div
-              className={`editor-slide ${presetClass[stylePreset] || presetClass.clean}`}
-              style={{ aspectRatio: slideFormat.ratio.replace(':', ' / ') }}
-              onPointerDown={handlePointerDown}
-              onPointerUp={handlePointerUp}
-            >
-              <div className="margin-guide" style={{ inset: slideFormat.margin / 6 }} />
-              {currentSlide.elements.map((element) => (
-                <SlideElement
-                  key={element.id}
-                  element={element}
-                  siblingElements={currentSlide.elements}
-                  selected={selectedId === element.id}
-                  onSelect={() => setSelectedId(element.id)}
-                  onUpdate={(patch) => updateElement(element.id, patch)}
-                />
-              ))}
+            <div className="editor-stage-wrap">
+              <div
+                className={`editor-slide ${presetClass[stylePreset] || presetClass.clean}`}
+                style={{ aspectRatio: slideFormat.ratio.replace(':', ' / ') }}
+                onPointerDown={handlePointerDown}
+                onPointerUp={handlePointerUp}
+              >
+                <div className="margin-guide" style={{ inset: slideFormat.margin / 6 }} />
+                {currentSlide.elements.map((element) => (
+                  <SlideElement
+                    key={element.id}
+                    element={element}
+                    siblingElements={currentSlide.elements}
+                    selected={selectedId === element.id}
+                    onSelect={() => setSelectedId(element.id)}
+                    onUpdate={(patch) => updateElement(element.id, patch)}
+                  />
+                ))}
+              </div>
             </div>
           </div>
+          <ElementInspector element={selectedElement} onUpdate={(patch) => updateElement(selectedId, patch)} />
         </div>
       </div>
 
@@ -738,7 +756,10 @@ function SlideElement({ element, siblingElements, selected, onSelect, onUpdate }
         />
       )}
       {element.type === 'shape' && (
-        <div className="shape-box">
+        <div
+          className={`shape-box ${element.shapeKind || 'roundRect'}`}
+          style={{ background: element.fillColor || '#3b82f6' }}
+        >
           {(editingInnerText || element.altText) && (
             <textarea
               autoFocus={editingInnerText}
@@ -792,5 +813,90 @@ function SlideElement({ element, siblingElements, selected, onSelect, onUpdate }
           />
         ))}
     </div>
+  );
+}
+
+function ElementInspector({ element, onUpdate }) {
+  const updateNumber = (key, value) => {
+    if (!element) return;
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) return;
+    const next = { [key]: numeric };
+    if (key === 'w') next.w = Math.max(5, Math.min(100 - element.x, numeric));
+    if (key === 'h') next.h = Math.max(5, Math.min(100 - element.y, numeric));
+    if (key === 'x') next.x = Math.max(0, Math.min(100 - element.w, numeric));
+    if (key === 'y') next.y = Math.max(0, Math.min(100 - element.h, numeric));
+    if (key === 'fontSize') next.fontSize = Math.max(10, Math.min(72, numeric));
+    onUpdate(next);
+  };
+
+  if (!element) {
+    return (
+      <aside className="element-inspector">
+        <h2>속성</h2>
+        <p className="muted-copy">요소를 선택하면 위치, 크기, 도형 종류를 조정할 수 있습니다.</p>
+      </aside>
+    );
+  }
+
+  return (
+    <aside className="element-inspector">
+      <h2>속성</h2>
+      <div className="inspector-section">
+        <strong>{element.type === 'text' ? '텍스트' : element.type === 'shape' ? '도형' : '이미지'}</strong>
+        <div className="inspector-grid">
+          <label>
+            X
+            <input type="number" value={Math.round(element.x)} onChange={(event) => updateNumber('x', event.target.value)} />
+          </label>
+          <label>
+            Y
+            <input type="number" value={Math.round(element.y)} onChange={(event) => updateNumber('y', event.target.value)} />
+          </label>
+          <label>
+            가로
+            <input type="number" value={Math.round(element.w)} onChange={(event) => updateNumber('w', event.target.value)} />
+          </label>
+          <label>
+            세로
+            <input type="number" value={Math.round(element.h)} onChange={(event) => updateNumber('h', event.target.value)} />
+          </label>
+        </div>
+      </div>
+
+      {(element.type === 'text' || element.type === 'shape') && (
+        <div className="inspector-section">
+          <label>
+            글자 크기
+            <input
+              type="number"
+              min="10"
+              max="72"
+              value={element.fontSize || 22}
+              onChange={(event) => updateNumber('fontSize', event.target.value)}
+            />
+          </label>
+        </div>
+      )}
+
+      {element.type === 'shape' && (
+        <div className="inspector-section">
+          <label>
+            도형 종류
+            <select value={element.shapeKind || 'roundRect'} onChange={(event) => onUpdate({ shapeKind: event.target.value })}>
+              {shapeOptions.map((option) => (
+                <option value={option.value} key={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            색상
+            <input type="color" value={element.fillColor || '#3b82f6'} onChange={(event) => onUpdate({ fillColor: event.target.value })} />
+          </label>
+        </div>
+      )}
+    </aside>
   );
 }

@@ -12,6 +12,14 @@ const PRESETS = {
   warm: { background: 'FFF7ED', text: '1F2937', shape: 'F59E0B' },
 };
 
+const SHAPE_KIND = {
+  rect: 'rect',
+  roundRect: 'roundRect',
+  ellipse: 'ellipse',
+  diamond: 'diamond',
+  triangle: 'triangle',
+};
+
 function stripHash(value) {
   return value.replace('#', '').toUpperCase();
 }
@@ -48,11 +56,11 @@ function addElementToSlide(pptSlide, element, deckSize, theme, ShapeType) {
   }
 
   if (element.type === 'shape') {
-    pptSlide.addShape(ShapeType.roundRect, {
+    pptSlide.addShape(ShapeType[SHAPE_KIND[element.shapeKind] || SHAPE_KIND.roundRect], {
       ...box,
       rectRadius: 0.08,
-      fill: { color: theme.shape },
-      line: { color: theme.shape },
+      fill: { color: (element.fillColor || theme.shape).replace('#', '') },
+      line: { color: (element.fillColor || theme.shape).replace('#', '') },
     });
     if (element.altText) {
       pptSlide.addText(element.altText, {

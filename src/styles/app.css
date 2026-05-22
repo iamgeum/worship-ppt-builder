@@ -499,6 +499,14 @@ textarea {
 
 .editor-main {
   min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 14px;
+  align-items: start;
+}
+
+.canvas-column {
+  min-width: 0;
 }
 
 .insert-toolbar {
@@ -593,6 +601,28 @@ textarea {
   display: grid;
   place-items: center;
   overflow: hidden;
+}
+
+.shape-box.rect {
+  border-radius: 0;
+}
+
+.shape-box.roundRect {
+  border-radius: 8px;
+}
+
+.shape-box.ellipse {
+  border-radius: 999px;
+}
+
+.shape-box.diamond {
+  border-radius: 0;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+.shape-box.triangle {
+  border-radius: 0;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
 }
 
 .shape-box textarea,
@@ -700,6 +730,64 @@ textarea {
   right: -7px;
   bottom: -7px;
   cursor: nwse-resize;
+}
+
+.element-inspector {
+  position: sticky;
+  top: 18px;
+  max-height: calc(100vh - 52px);
+  overflow: auto;
+  border: 1px solid #dbe1ea;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 14px;
+}
+
+.element-inspector h2 {
+  margin-bottom: 12px;
+}
+
+.muted-copy {
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.inspector-section {
+  display: grid;
+  gap: 10px;
+  padding: 12px 0;
+  border-top: 1px solid #edf1f7;
+}
+
+.inspector-section:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.inspector-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.element-inspector label {
+  margin-bottom: 0;
+  gap: 6px;
+  color: #475569;
+  font-size: 13px;
+}
+
+.element-inspector input,
+.element-inspector select {
+  width: 100%;
+  min-width: 0;
+  padding: 8px 9px;
+}
+
+.element-inspector input[type="color"] {
+  height: 40px;
+  padding: 4px;
 }
 
 .bottom-filmstrip {
@@ -933,6 +1021,15 @@ textarea {
   .bottom-filmstrip,
   .editor-layout {
     grid-template-columns: 1fr;
+  }
+
+  .editor-main {
+    grid-template-columns: 1fr;
+  }
+
+  .element-inspector {
+    position: static;
+    max-height: none;
   }
 
   .order-rail {
