@@ -446,7 +446,7 @@ export default function EditorAgent({ title = 'PPT 만들기', onAddLyrics, onAd
                 onDragStart={(event) => {
                   setDragIndex(index);
                   setDropIndex(index);
-                  setDragPreview({ x: event.clientX, y: event.clientY, text: getSlideText(slide) || '빈 슬라이드' });
+                  setDragPreview({ x: event.clientX, y: event.clientY, slide, index });
                   event.dataTransfer.effectAllowed = 'move';
                 }}
                 onDragOver={(event) => {
@@ -462,7 +462,7 @@ export default function EditorAgent({ title = 'PPT 만들기', onAddLyrics, onAd
                 }}
               >
                 <strong>{index + 1}</strong>
-                <p>{getSlideText(slide) || '빈 슬라이드'}</p>
+                <SlideThumbnail slide={slide} stylePreset={stylePreset} slideFormat={slideFormat} />
               </button>
               <button className="rail-delete" type="button" onClick={() => deleteSlide(index)} aria-label="삭제">
                 <X size={16} />
@@ -627,7 +627,8 @@ export default function EditorAgent({ title = 'PPT 만들기', onAddLyrics, onAd
 
       {dragPreview && (
         <div className="drag-preview" style={{ left: dragPreview.x + 16, top: dragPreview.y + 16 }}>
-          {dragPreview.text}
+          <SlideThumbnail slide={dragPreview.slide} stylePreset={stylePreset} slideFormat={slideFormat} />
+          <span>{dragPreview.index + 1}</span>
         </div>
       )}
 
@@ -812,6 +813,46 @@ function SlideElement({ element, siblingElements, selected, onSelect, onUpdate }
             }}
           />
         ))}
+    </div>
+  );
+}
+
+function SlideThumbnail({ slide, stylePreset, slideFormat }) {
+  return (
+    <div className={`slide-thumb-render ${presetClass[stylePreset] || presetClass.clean}`} style={{ aspectRatio: slideFormat.ratio.replace(':', ' / ') }}>
+      {slide.elements.length === 0 && <span className="empty-thumb-label">빈 슬라이드</span>}
+      {slide.elements.map((element) => (
+        <div
+          className={`thumb-element ${element.type}`}
+          key={element.id}
+          style={{
+            left: `${element.x}%`,
+            top: `${element.y}%`,
+            width: `${element.w}%`,
+            height: `${element.h}%`,
+          }}
+        >
+          {element.type === 'text' && <p style={{ fontSize: `${Math.max(5, (element.fontSize || 22) / 4)}px` }}>{element.text}</p>}
+          {element.type === 'shape' && (
+            <div
+              className={`thumb-shape ${element.shapeKind || 'roundRect'}`}
+              style={{ background: element.fillColor || '#3b82f6' }}
+            >
+              {element.altText && <span>{element.altText}</span>}
+            </div>
+          )}
+          {element.type === 'image' && (
+            <div className="thumb-image">
+              {element.src?.startsWith('data:image/') || element.src?.startsWith('http') ? (
+                <img src={element.src} alt="" />
+              ) : (
+                <span>{element.altText || '이미지'}</span>
+              )}
+              {element.altText && <em>{element.altText}</em>}
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
