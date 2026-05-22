@@ -1,4 +1,6 @@
 import {
+  ClipboardPaste,
+  Copy,
   Download,
   GripVertical,
   Image,
@@ -34,19 +36,52 @@ export default function EditorAgent({ title = 'PPT 만들기', onAddLyrics, onAd
   const [dragPreview, setDragPreview] = useState(null);
   const [qualityIssues, setQualityIssues] = useState(null);
   const [exporting, setExporting] = useState(false);
+  const [copiedElement, setCopiedElement] = useState(null);
   const imageUploadRef = useRef(null);
   const currentSlide = slides[currentSlideIndex] || slides[0];
+  const selectedElement = currentSlide?.elements.find((element) => element.id === selectedId);
 
   useEffect(() => {
     const onKeyDown = (event) => {
+      const target = event.target;
+      const isEditingText = target?.matches?.('textarea, input, select, [contenteditable="true"]');
+      if (isEditingText) return;
+
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
         event.preventDefault();
         undo();
+        return;
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'c' && selectedElement) {
+        event.preventDefault();
+        copySelectedElement();
+        return;
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'v' && copiedElement) {
+        event.preventDefault();
+        pasteCopiedElement();
+        return;
+      }
+      if ((event.key === 'Delete' || event.key === 'Backspace') && selectedElement) {
+        event.preventDefault();
+        deleteSelectedElement();
+        return;
+      }
+      if (selectedElement && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
+        event.preventDefault();
+        const step = event.shiftKey ? 5 : 1;
+        const movement = {
+          ArrowLeft: [-step, 0],
+          ArrowRight: [step, 0],
+          ArrowUp: [0, -step],
+          ArrowDown: [0, step],
+        }[event.key];
+        moveSelectedElement(movement[0], movement[1]);
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [undo]);
+  }, [copiedElement, selectedElement, undo]);
 
   const updateElement = (elementId, patch) => {
     updateState((state) => ({
@@ -112,6 +147,67 @@ export default function EditorAgent({ title = 'PPT 만들기', onAddLyrics, onAd
       setToast('이미지를 추가했습니다');
     });
     reader.readAsDataURL(file);
+  };
+
+  const deleteSelectedElement = () => {
+    if (!selectedId) return;
+    updateState((state) => ({
+      ...state,
+      slides: state.slides.map((slide, index) =>
+        index === state.currentSlideIndex
+          ? { ...slide, elements: slide.elements.filter((element) => element.id !== selectedId) }
+          : slide,
+      ),
+    }));
+    setSelectedId(null);
+    setToast('요소를 삭제했습니다');
+  };
+
+  const copySelectedElement = () => {
+    if (!selectedElement) return;
+    setCopiedElement({ ...selectedElement });
+    setToast('요소를 복사했습니다');
+  };
+
+  const pasteCopiedElement = () => {
+    if (!copiedElement) return;
+    const element = {
+      ...copiedElement,
+      id: crypto.randomUUID(),
+      x: Math.max(0, Math.min(100 - copiedElement.w, copiedElement.x + 3)),
+      y: Math.max(0, Math.min(100 - copiedElement.h, copiedElement.y + 3)),
+    };
+    updateState((state) => ({
+      ...state,
+      slides: state.slides.map((slide, index) =>
+        index === state.currentSlideIndex ? { ...slide, elements: [...slide.elements, element] } : slide,
+      ),
+    }));
+    setSelectedId(element.id);
+    setToast('붙여넣었습니다');
+  };
+
+  const moveSelectedElement = (deltaX, deltaY) => {
+    if (!selectedId) return;
+    updateState((state) => ({
+      ...state,
+      slides: state.slides.map((slide, index) =>
+        index === state.currentSlideIndex
+          ? {
+              ...slide,
+              elements: slide.elements.map((element) =>
+                element.id === selectedId
+                  ? {
+                      ...element,
+                      x: Math.max(0, Math.min(100 - element.w, element.x + deltaX)),
+                      y: Math.max(0, Math.min(100 - element.h, element.y + deltaY)),
+                    }
+                  : element,
+              ),
+            }
+          : slide,
+      ),
+    }));
   };
 
   const addSlide = () => {
@@ -285,6 +381,21 @@ export default function EditorAgent({ title = 'PPT 만들기', onAddLyrics, onAd
             </button>
             <button className="icon-text-button" type="button" onClick={() => imageUploadRef.current?.click()}>
               <Upload size={18} /> 업로드
+            </button>
+            <span className="toolbar-divider" />
+            <button className="icon-text-button" type="button" onClick={copySelectedElement} disabled={!selectedElement}>
+              <Copy size={18} /> 요소 복사
+            </button>
+            <button className="icon-text-button" type="button" onClick={pasteCopiedElement} disabled={!copiedElement}>
+              <ClipboardPaste size={18} /> 붙여넣기
+            </button>
+            <button
+              className="danger-tool-button"
+              type="button"
+              onClick={deleteSelectedElement}
+              disabled={!selectedElement}
+            >
+              <Trash2 size={18} /> 요소 삭제
             </button>
             <input
               ref={imageUploadRef}

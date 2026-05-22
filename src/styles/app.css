@@ -196,6 +196,20 @@ h2 {
   border-color: #cfd8e3;
 }
 
+.danger-tool-button {
+  min-height: 44px;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+  padding: 0 14px;
+  background: #ffffff;
+  color: #b42318;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
 .icon-button {
   width: 44px;
   height: 44px;
@@ -496,6 +510,12 @@ textarea {
 
 .hidden-file-input {
   display: none;
+}
+
+.toolbar-divider {
+  width: 1px;
+  min-height: 36px;
+  background: #dbe1ea;
 }
 
 .autosave {
