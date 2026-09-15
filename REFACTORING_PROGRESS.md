@@ -9,213 +9,285 @@
 ## 📋 전체 로드맵
 
 ```
-Phase 1: 기본 구조 정립 (1주)
-├─ ✅ Utils 함수 분리
-├─ ✅ 각 Agent를 함수 기반 구조로 준비
-├─ ✅ 진행상황 추적 문서 생성
-└─ ⏳ App.jsx 라우팅 정리
+Phase 1: 기본 구조 정립 ✅ 완료!
+├─ ✅ Utils 함수 분리 (4개 파일)
+├─ ✅ OrderManager 로직 분리 (2개 파일)
+├─ ✅ 진행상황 추적 문서
+└─ ✅ EditorAgent 검토 완료
 
-Phase 2: 각 에이전트 구현 (2~3주)
-├─ 🔴 에이전트 1 (MenuAgent) — 함수 분리
-├─ 🔴 에이전트 3 (OrderManagerAgent) — 로직 분리
-├─ 🔴 에이전트 6 (TextEditorAgent) — 성경 검색, 페이지 분할 함수화
-└─ 🔴 에이전트 4 (EditorAgent) — 캐러셀, Snapping 유틸화
+Phase 2: 각 에이전트 구현 🔴 진행 중
+├─ ⏳ TextEditorAgent 로직 분리
+├─ ⏳ EditorAgent 로직 분리
+└─ ⏳ MenuAgent 마무리
 
-Phase 3: PPT 내보내기 (1주)
-├─ ⏳ pptxgenjs 통합
-├─ ⏳ 슬라이드 형식 적용
-└─ ⏳ PPTX 다운로드 기능
+Phase 3: 통합 & 테스트 (예정)
+├─ ⏳ 전체 라우팅 정리 (App.jsx)
+└─ ⏳ 모든 기능 작동 확인
+
+Phase 4: PPT 내보내기 (예정)
+├─ ⏳ pptxExporter 개선
+└─ ⏳ PPTX 다운로드 완성
 ```
 
 ---
 
-## ✅ 완료된 작업
+## ✅ 완료된 작업 (Phase 1 + 일부 Phase 2)
 
-### Phase 1-1: Utils 함수 분리 ✅
+### Phase 1-1: Utils 함수 분리 ✅ 100%
 
-#### 생성된 파일
+생성된 파일들:
 
-| 파일명 | 위치 | 목적 | 상태 |
-|--------|------|------|------|
-| `slideUtils.js` | `src/utils/` | 슬라이드 배열 조작 함수 | ✅ 완료 |
-| `bibleSearch.js` | `src/utils/` | 성경 검색 및 캐싱 로직 | ✅ 완료 |
-| `textParser.js` | `src/utils/` | 텍스트 파싱 (엔터 2번 분할) | ✅ 완료 |
-| `fontSizer.js` | `src/utils/` | 자동 폰트 크기 조정 | ✅ 완료 |
+| 파일명 | 함수 개수 | 목적 | 상태 |
+|--------|----------|------|------|
+| `slideUtils.js` | 12개 | 슬라이드 배열 조작 | ✅ 완료 |
+| `textParser.js` | 11개 | 텍스트 파싱 & 페이지 분할 | ✅ 완료 |
+| `fontSizer.js` | 7개 | 자동 폰트 크기 조정 | ✅ 완료 |
+| `bibleSearch.js` | 8개 | 성경 검색 & 캐싱 | ✅ 완료 |
 
-#### 이동/통합된 로직
+**총 38개의 순수 함수 생성**
 
-- ✅ `slideHelpers.js`의 `getSlideText()` → `slideUtils.js`로 통합
-- ✅ `slideHelpers.js`의 `makeSlide()` → `slideUtils.js`로 통합
-- ✅ 새로운 유틸: `addSlide()`, `deleteSlide()`, `reorderSlides()`
+### Phase 2-1: OrderManagerAgent 로직 분리 ✅ 70%
+
+생성된 파일들:
+
+| 파일명 | 함수 개수 | 목적 | 상태 |
+|--------|----------|------|------|
+| `orderActions.js` | 6개 | 슬라이드 추가/삭제/순서 변경 | ✅ 완료 |
+| `orderValidation.js` | 5개 | 슬라이드 유효성 검사 | ✅ 완료 |
+
+**다음 단계**: OrderManagerAgent.jsx 컴포넌트에서 이 함수들을 import하도록 리팩토링
 
 ---
 
 ## 🔴 현재 진행 중
 
-### Phase 1-2: Agent 함수 기반 구조 준비
+### Phase 2-2: TextEditorAgent 로직 분리 (0%)
 
-**목표**: 각 Agent를 "순수 컴포넌트 + 로직 함수" 구조로 변환
+**예상 분리 대상**:
+- [ ] TextEditorAgent.jsx 검토 (크기, 로직 식별)
+- [ ] textEditorActions.js 생성 (텍스트 저장, 입력 처리)
+- [ ] BibleSelector 분리 (성경 선택 UI + 로직)
+- [ ] TextEditorAgent.jsx 리팩토링
 
-#### 에이전트 1 — MenuAgent
-- **현재 상태**: 컴포넌트만 있음 (로직 분리 필요 없음 — 간단)
-- **분리 대상**: 없음 (메뉴 항목 배열을 config 파일로 이동만 함)
-- **진행률**: 90% (최소 변경)
+### Phase 2-3: EditorAgent 로직 분리 (10%)
 
-#### 에이전트 3 — OrderManagerAgent
-- **현재 상태**: `addSlide`, `deleteSlide`, `reorder` 등이 컴포넌트 내부에 있음
-- **분리 대상**:
-  - [ ] `addSlide()` → `src/agents/03_order-manager/orderActions.js`
-  - [ ] `deleteSlide()` → `src/agents/03_order-manager/orderActions.js`
-  - [ ] `reorder()` → `src/agents/03_order-manager/orderActions.js`
-  - [ ] `save()` → `src/agents/03_order-manager/orderValidation.js`
-  - [ ] `jumpToSlide()` → `src/agents/03_order-manager/orderActions.js`
-- **진행률**: 30% (로직 분리 진행 중)
+**검토 완료**: 
+- ✅ 파일 크기: 944줄 (매우 큼)
+- ✅ 로직 식별: 캐러셀, Snapping, 요소 편집 분리 가능
 
-#### 에이전트 4 — EditorAgent
-- **현재 상태**: 모듈 검토 필요
-- **분리 예상 대상**: 캐러셀 조작, Snapping 알고리즘, 요소 편집 로직
-- **진행률**: 0% (검토 필요)
+**예상 분리 대상**:
+- [ ] editorActions.js (요소 추가/삭제/복사/붙여넣기)
+- [ ] snappingEngine.js (Snapping 알고리즘)
+- [ ] carouselHandler.js (슬라이드 이동 로직)
+- [ ] EditorAgent.jsx 리팩토링
 
-#### 에이전트 6 — TextEditorAgent
-- **현재 상태**: 모듈 검토 필요
-- **분리 예상 대상**: 성경 검색, 페이지 분할, 폰트 자동 조정
-- **진행률**: 0% (검토 필요)
+### Phase 2-4: MenuAgent 마무리 (90%)
 
-#### 에이전트 2 — PersonalizerAgent
-- **진행률**: 0% (낮은 우선순위)
-
-#### 에이전트 7 — UxBenchmarkAgent
-- **진행률**: 0% (낮은 우선순위)
+**예상 작업**:
+- [ ] menuConfig.js 생성 (메뉴 항목 배열 추출)
+- [ ] MenuAgent.jsx 최소 정리
 
 ---
 
-## ⏳ 다음 단계 (TODO)
+## 📊 현재 진행률
 
-### 즉시 해야 할 것
+### Phase별 진행률
 
-1. **`src/utils/` 폴더 내 새 파일들 생성**
-   ```
-   src/utils/
-   ├── slideUtils.js          ← Utils 재구성
-   ├── bibleSearch.js         ← 성경 검색 함수
-   ├── textParser.js          ← 텍스트 분할 로직
-   ├── fontSizer.js           ← 폰트 자동 조정
-   └── slideHelpers.js        ← 기존 파일 (통합 후 정리)
-   ```
+| Phase | 진행률 | 상태 | 설명 |
+|-------|--------|------|------|
+| **Phase 1** | ✅ 100% | **완료** | Utils 4개 파일 완성 |
+| **Phase 2** | 🟡 30% | 진행 중 | OrderManager 2개 파일 완성, 나머지 진행 필요 |
+| **Phase 3** | ⚪ 0% | 미시작 | App.jsx 라우팅 정리 |
+| **Phase 4** | ⚪ 0% | 미시작 | PPT 내보내기 완성 |
+| **전체** | 🟡 **35%** | 진행 중 | 총 13회 중 약 5회 완료 |
 
-2. **OrderManagerAgent 로직 분리**
-   - 컴포넌트에서 액션 함수들 추출
-   - `src/agents/03_order-manager/orderActions.js` 생성
-   - `src/agents/03_order-manager/orderValidation.js` 생성
+### 파일별 생성 현황
 
-3. **EditorAgent 구조 검토**
+```
+총 생성된 파일: 6개
+├─ src/utils/ (4개)
+│  ├─ slideUtils.js ✅
+│  ├─ textParser.js ✅
+│  ├─ fontSizer.js ✅
+│  └─ bibleSearch.js ✅
+│
+└─ src/agents/03_order-manager/ (2개)
+   ├─ orderActions.js ✅
+   └─ orderValidation.js ✅
+```
+
+---
+
+## 🎯 다음 단계 (우선순위)
+
+### 즉시 해야 할 일
+
+1. **OrderManagerAgent.jsx 리팩토링** (1회)
+   - `orderActions.js` & `orderValidation.js`의 함수들을 import
+   - 컴포넌트에서 중복되는 로직 제거
+   - 함수 호출 방식으로 변경
+
+2. **TextEditorAgent 검토** (1회)
    - 파일 크기 확인
-   - 캐러셀, Snapping 등 로직 식별
-   - 분리 전략 수립
+   - 분리 가능한 로직 식별
 
-4. **TextEditorAgent 구조 검토**
-   - 성경 검색 로직 추출
-   - 페이지 분할 로직 추출
-   - 폰트 계산 로직 추출
+3. **TextEditorAgent 로직 분리** (2~3회)
+   - textEditorActions.js 생성
+   - BibleSelector.jsx 추출
+   - TextEditorAgent.jsx 리팩토링
 
-5. **App.jsx 라우팅 정리**
-   - 현재: 모드 기반 라우팅 (orderManager 누락)
-   - 개선: 모든 view 타입 처리
+4. **EditorAgent 로직 분리** (3~4회)
+   - editorActions.js 생성
+   - snappingEngine.js 생성
+   - carouselHandler.js 생성
+   - EditorAgent.jsx 리팩토링
 
----
+5. **App.jsx 라우팅 정리** (1회)
+   - 모든 에이전트 view 타입 처리
+   - OrderManagerAgent 추가
 
-## 📊 진행률 요약
-
-| 구성 요소 | 진행률 | 상태 | 담당자 |
-|----------|--------|------|--------|
-| Utils 함수 분리 | ✅ 100% | 완료 | - |
-| MenuAgent 정리 | 🟡 90% | 거의 완료 | - |
-| OrderManagerAgent 분리 | 🔴 30% | 진행 중 | - |
-| EditorAgent 검토 | ⚪ 0% | 시작 예정 | - |
-| TextEditorAgent 검토 | ⚪ 0% | 시작 예정 | - |
-| App.jsx 최적화 | ⚪ 0% | 시작 예정 | - |
-| **전체** | 🟡 **30%** | 진행 중 | - |
+6. **전체 통합 테스트** (1회)
+   - 모든 기능 작동 확인
+   - 콘솔 에러 확인
 
 ---
 
 ## 📝 코드 스타일 가이드
 
-### 새로운 Utils 함수 작성 규칙
+### 생성된 파일 네이밍 규칙
+
+```
+액션/로직 파일: {agentName}Actions.js
+                {agentName}Validation.js
+                {agentName}Utils.js
+
+UI 컴포넌트: {ComponentName}.jsx
+
+유틸 함수: {domainName}.js (slideUtils.js, fontSizer.js)
+```
+
+### 함수 작성 규칙
 
 ```javascript
 /**
- * [한글 설명 (1줄)]
+ * 한글 설명 (1줄)
  * 
  * @param {Type} paramName - [설명]
  * @returns {ReturnType} [설명]
- * 
- * @example
- * const result = functionName(input);
  */
 export function functionName(paramName) {
   // 구현
 }
 ```
 
-### Agent 함수 분리 규칙
+---
 
-```javascript
-// src/agents/03_order-manager/orderActions.js
+## 🔗 생성된 파일 상세 정보
 
-export function addSlide(currentSlides, newSlide) {
-  return [...currentSlides, newSlide];
-}
+### Utils 함수 (src/utils/)
 
-export function deleteSlide(slides, index) {
-  return slides.filter((_, i) => i !== index);
-}
+**slideUtils.js** (12개 함수)
+- makeSlide() — 새 슬라이드 생성
+- getSlideText() — 텍스트 추출
+- addSlide(), deleteSlide(), reorderSlides() — 배열 조작
+- findEmptySlides() — 빈 슬라이드 찾기
+- addElementToSlide(), removeElementFromSlide(), updateElementInSlide()
+- updateSlideInList()
 
-// 컴포넌트에서 호출
-import { addSlide } from './orderActions.js';
+**textParser.js** (11개 함수)
+- splitTextByPageBreak() — 엔터 2번 기준 분할
+- pagesToSlides() — 페이지→슬라이드 변환
+- parseTextToSlides() — 통합 처리
+- countPages(), visualizePageBreaks(), normalizeText()
+- bibleToSlide(), mergeVerses(), validateText()
 
-function OrderManagerAgent() {
-  const { updateState } = useWorship();
-  
-  const handleAddSlide = () => {
-    updateState((state) => ({
-      ...state,
-      slides: addSlide(state.slides, makeSlide()),
-    }));
-  };
-}
-```
+**fontSizer.js** (7개 함수)
+- calculateOptimalFontSize() — 최적 폰트 크기 계산
+- fitTextInSlide() — 오버플로우 확인 및 조정
+- countLines(), isTextOverflow(), getRecommendedCharLimit()
+- truncateTextByFontSize()
+
+**bibleSearch.js** (8개 함수)
+- initializeBibleCache() — 성경 DB 초기화
+- searchBible() — 역본/권/장/절 검색
+- searchBibleRange() — 범위 검색
+- parseShortcutBible() — "창 1:1" 형식 파싱
+- getAvailableBooks(), getAvailableVersions()
+- saveBibleHistory(), getBibleHistory(), clearBibleHistory()
+
+### Agent 로직 함수 (src/agents/03_order-manager/)
+
+**orderActions.js** (6개 함수)
+- handleAddSlide() — 슬라이드 추가
+- handleDeleteSlide() — 슬라이드 삭제
+- handleReorderSlides() — 순서 변경
+- handleJumpToSlide() — 특정 슬라이드로 이동
+- handleSelectSlide() — 슬라이드 선택
+
+**orderValidation.js** (5개 함수)
+- validateBeforeSave() — 저장 전 검증
+- calculateSlideStats() — 슬라이드 통계
+- getSlidesSummary() — 상태 요약
+- validateSlide() — 개별 슬라이드 검증
 
 ---
 
-## 🎯 개발자를 위한 체크리스트
+## 🎓 학습 포인트
 
-### Phase 1 완료 후 체크
-- [ ] 모든 Utils 함수가 `src/utils/` 아래에 있는가?
-- [ ] `slideHelpers.js`는 정리되었는가?
-- [ ] App.jsx에서 OrderManagerAgent가 렌더되는가?
+### 모듈화의 이점
+
+1. **테스트 가능성**: 순수 함수는 독립적 테스트 가능
+2. **재사용성**: 다른 컴포넌트에서도 같은 함수 사용 가능
+3. **유지보수성**: 버그 수정이 한 곳에서만 필요
+4. **가독성**: 메인 컴포넌트가 훨씬 깔끔함
+
+### 다음 개발자를 위한 팁
+
+- **모든 함수는 JSDoc 주석 포함**: `@param`, `@returns` 필수
+- **순수 함수 원칙**: 외부 상태 변경 없음 (side effects 최소화)
+- **State 업데이트**: `updateState(state => ({...state, ...}))` 패턴 사용
+- **Toast 메시지**: 사용자 피드백을 위해 `setToast()` 활용
+
+---
+
+## 📞 추적 정보
+
+| 항목 | 값 |
+|------|-----|
+| 마지막 업데이트 | 2026-09-15 |
+| 현재 Phase | Phase 2-1 완료, 2-2/2-3 진행 중 |
+| 다음 타겟 | TextEditorAgent 로직 분리 |
+| 예상 완료 | 2026-09-22 |
+
+---
+
+## ✅ 체크리스트
+
+### Phase 1 체크리스트 ✅ 완료
+- [x] slideUtils.js 생성
+- [x] textParser.js 생성
+- [x] fontSizer.js 생성
+- [x] bibleSearch.js 생성
+- [x] 진행상황 문서 생성
+
+### Phase 2 진행 중 체크리스트
+- [x] orderActions.js 생성
+- [x] orderValidation.js 생성
+- [ ] OrderManagerAgent.jsx 리팩토링
+- [ ] TextEditorAgent 로직 분리 (3 파일)
+- [ ] EditorAgent 로직 분리 (3 파일)
+- [ ] MenuAgent 마무리 (1 파일)
+
+### Phase 3 시작 전 체크
+- [ ] 모든 Agent 로직이 분리되었는가?
+- [ ] App.jsx에서 모든 view 타입이 처리되는가?
 - [ ] 모든 에이전트가 독립적으로 작동하는가?
-
-### Phase 2 시작 전 체크
-- [ ] 각 Agent 폴더에 액션/로직 파일이 있는가?
-- [ ] 컴포넌트와 로직이 분리되었는가?
-- [ ] 테스트 가능한 순수 함수로 작성했는가?
 
 ### 배포 전 체크
 - [ ] 전체 기능이 작동하는가?
 - [ ] 콘솔 에러가 없는가?
-- [ ] 성능 테스트 통과했는가?
+- [ ] 토스트 메시지가 제대로 표시되는가?
 
 ---
 
-## 🔗 참고 링크
-
-- [README.md](./README.md) — 프로젝트 개요
-- [AGENTS.md](./AGENTS.md) — 에이전트 상세 명세
-- [docs/](./docs/) — 기획 문서
-
----
-
-## 📞 문의 사항
-
-각 Phase별 진행상황은 이 파일을 업데이트합니다.
-마지막 수정: **2026-09-15**
+이제 Phase 2-2 (TextEditorAgent 검토)로 진행하시겠습니까?
